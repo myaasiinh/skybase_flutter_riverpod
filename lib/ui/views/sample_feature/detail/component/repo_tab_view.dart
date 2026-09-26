@@ -1,9 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:skybase/config/themes/app_style.dart';
-import 'package:skybase/data/models/repo/repo.dart';
-import 'package:skybase/data/models/sample_feature/sample_feature.dart';
-import 'package:skybase/ui/widgets/sky_image.dart';
+import 'package:skybase/domain/entities/repo/repo.dart';
+import 'package:skybase/domain/entities/sample_feature/sample_feature.dart';
 
 class RepoTabView extends StatelessWidget {
   const RepoTabView({super.key, required this.data});
@@ -15,72 +14,40 @@ class RepoTabView extends StatelessWidget {
     return ListView.separated(
       separatorBuilder: (context, _) => const Divider(),
       itemCount: data.repositoryList?.length ?? 0,
-      padding: const EdgeInsets.only(top: 8),
       itemBuilder: (_, index) {
-        final Repo? repos = data.repositoryList?[index];
-        return (repos == null)
+        final Repo? item = data.repositoryList?[index];
+        return (item == null)
             ? Center(
                 child: Text('txt_no_repository'.tr()),
               )
             : ListTile(
-                leading: SkyImage(
-                  size: 30,
-                  shapeImage: ShapeImage.circle,
-                  src: '${repos.owner.avatarUrl}&s=200',
-                ),
-                title: Text(repos.name.toString(), style: AppStyle.body2),
+                title: Text(item.name),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Language: ${repos.language ?? '--'}',
-                      style: AppStyle.body3,
+                      item.description ?? '-',
+                      style: AppStyle.body2,
                     ),
                     const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 80),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.star_border,
-                                size: 16,
-                              ),
-                              Text(
-                                ' ${repos.totalStar}',
-                                style: AppStyle.body3,
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.remove_red_eye_outlined,
-                                size: 16,
-                              ),
-                              Text(
-                                ' ${repos.totalWatch}',
-                                style: AppStyle.body3,
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              const SkyImage(
-                                src: 'assets/images/ic_fork.svg',
-                                height: 14,
-                                color: Colors.grey,
-                              ),
-                              Text(
-                                ' ${repos.totalFork}',
-                                style: AppStyle.body3,
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
+                    Row(
+                      children: [
+                        const Icon(Icons.star_outline, size: 14),
+                        Text(
+                          ' ${item.totalStar ?? 0}  ',
+                          style: AppStyle.body3,
+                        ),
+                        const Icon(Icons.remove_red_eye_outlined, size: 14),
+                        Text(
+                          ' ${item.totalWatch ?? 0}  ',
+                          style: AppStyle.body3,
+                        ),
+                        const Icon(Icons.fork_right_outlined, size: 14),
+                        Text(
+                          ' ${item.totalFork ?? 0}  ',
+                          style: AppStyle.body3,
+                        ),
+                      ],
                     )
                   ],
                 ),

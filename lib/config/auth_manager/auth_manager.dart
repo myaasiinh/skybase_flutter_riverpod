@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:skybase/config/themes/theme_manager.dart';
 import 'package:skybase/config/base/navigation.dart';
@@ -9,12 +9,11 @@ import 'package:skybase/core/database/storage/cache_data.dart';
 import 'package:skybase/core/database/storage/storage_key.dart';
 import 'package:skybase/core/database/storage/storage_manager.dart';
 import 'package:skybase/core/database/secure_storage/secure_storage_manager.dart';
-import 'package:skybase/data/models/user/user.dart';
+import 'package:skybase/data/models/user/user.dart' as dto;
+import 'package:skybase/domain/entities/user/user.dart' as entity;
 import 'package:skybase/ui/views/intro/intro_view.dart';
 import 'package:skybase/ui/views/login/login_view.dart';
 import 'package:skybase/ui/views/main_navigation/main_nav_view.dart';
-
-part 'auth_manager.g.dart';
 
 enum AppType {
   INITIAL,
@@ -23,8 +22,9 @@ enum AppType {
   AUTHENTICATED,
 }
 
-@riverpod
-class AuthManager extends _$AuthManager {
+final authManagerProvider = NotifierProvider<AuthManager, AppType>(AuthManager.new);
+
+class AuthManager extends Notifier<AppType> {
   late final StorageManager _storage;
   late final SecureStorageManager _secureStorage;
   late final ThemeManager _themeManager;
@@ -64,8 +64,10 @@ class AuthManager extends _$AuthManager {
         if (!permanentKeys.contains(key)) {
           final now = DateTime.now();
           dynamic storageItem = await _storage.get(key);
-          CacheData cacheData = CacheData.fromJson(jsonDecode(storageItem));
-          if (cacheData.expiredDate.isBefore(now)) await _storage.delete(key);
+          if (storageItem != null) {
+            CacheData cacheData = CacheData.fromJson(jsonDecode(storageItem));
+            if (cacheData.expiredDate.isBefore(now)) await _storage.delete(key);
+          }
         }
       }),
     );
@@ -121,7 +123,7 @@ class AuthManager extends _$AuthManager {
   }
 
   Future<void> login({
-    required User user,
+    required entity.User user,
     required String token,
     required String refreshToken,
   }) async {
@@ -134,7 +136,7 @@ class AuthManager extends _$AuthManager {
   }
 
   Future<void> saveAuthData({
-    required User user,
+    required entity.User user,
     required String token,
     required String refreshToken,
   }) async {
@@ -143,18 +145,34 @@ class AuthManager extends _$AuthManager {
     await _secureStorage.setRefreshToken(value: refreshToken);
   }
 
-  Future<void> saveUserData({required User user}) async {
+  Future<void> saveUserData({required entity.User user}) async {
+    final userDto = dto.User(
+      id: user.id,
+      token: user.token,
+      refreshToken: user.refreshToken,
+      username: user.username,
+      name: user.name,
+      location: user.location,
+      company: user.company,
+      gitUrl: user.gitUrl,
+      bio: user.bio,
+      avatarUrl: user.avatarUrl,
+      repository: user.repository,
+      followers: user.followers,
+      following: user.following,
+    );
     await _storage.save<String>(
       StorageKey.USERS,
-      jsonEncode(user.toJson()),
+      jsonEncode(userDto.toJson()),
     );
   }
 
-  User? get user {
+  entity.User? get user {
     if (_storage.has(StorageKey.USERS)) {
-      return User.fromJson(
+      final userDto = dto.User.fromJson(
         jsonDecode(_storage.get<String>(StorageKey.USERS)),
       );
+      return userDto.toEntity();
     }
     return null;
   }

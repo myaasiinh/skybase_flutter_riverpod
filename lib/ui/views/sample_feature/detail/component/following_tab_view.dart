@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:skybase/config/themes/app_style.dart';
-import 'package:skybase/data/models/sample_feature/sample_feature.dart';
+import 'package:skybase/domain/entities/sample_feature/sample_feature.dart';
 import 'package:skybase/ui/widgets/sky_image.dart';
 
 class FollowingTabView extends StatelessWidget {
@@ -25,7 +25,6 @@ class FollowingTabView extends StatelessWidget {
                   size: 30,
                   shapeImage: ShapeImage.circle,
                   src: '${user.avatarUrl}&s=200',
-                  // onTap: () => controller.onChooseUser(user: user),
                 ),
                 title: Text(user.username.toString()),
                 subtitle: Text(

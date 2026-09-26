@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skybase/config/base/navigation.dart';
 import 'package:skybase/core/database/storage/storage_key.dart';
 import 'package:skybase/core/database/storage/storage_manager.dart';
 import 'package:skybase/ui/views/login/login_view.dart';
-
-part 'intro_notifier.g.dart';
 
 class IntroState {
   final int currentIndex;
@@ -30,8 +28,9 @@ class IntroState {
   }
 }
 
-@riverpod
-class IntroNotifier extends _$IntroNotifier {
+final introProvider = NotifierProvider.autoDispose<IntroNotifier, IntroState>(IntroNotifier.new);
+
+class IntroNotifier extends AutoDisposeNotifier<IntroState> {
   late final StorageManager _storageManager;
   late final PageController _pageController;
 
@@ -41,7 +40,7 @@ class IntroNotifier extends _$IntroNotifier {
 
     _pageController = PageController(initialPage: 0);
     ref.onDispose(() {
-      _pageController.dispose(); // ✅ WAJIB
+      _pageController.dispose();
     });
 
     return IntroState(
@@ -55,7 +54,7 @@ class IntroNotifier extends _$IntroNotifier {
   }
 
   void onPreviousPage() {
-    _pageController.previousPage(
+    state.pageController.previousPage(
       curve: Curves.easeIn,
       duration: const Duration(milliseconds: 260),
     );
@@ -63,7 +62,7 @@ class IntroNotifier extends _$IntroNotifier {
 
   void onNextPage(BuildContext context, Navigation navigation) {
     if (!state.isLastPage) {
-      _pageController.nextPage(
+      state.pageController.nextPage(
         curve: Curves.easeIn,
         duration: const Duration(milliseconds: 260),
       );

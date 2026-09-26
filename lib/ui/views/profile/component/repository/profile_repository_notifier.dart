@@ -1,13 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:skybase/config/base/request_param.dart';
-import 'package:skybase/data/models/repo/repo.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skybase/domain/entities/repo/repo.dart';
+import 'package:skybase/domain/repositories/auth_repository.dart';
 import 'package:skybase/data/repositories/auth/auth_repository.dart';
 
-part 'profile_repository_notifier.g.dart';
+final profileRepositoryProvider = AsyncNotifierProvider.autoDispose<ProfileRepositoryNotifier, List<Repo>>(ProfileRepositoryNotifier.new);
 
-@riverpod
-class ProfileRepositoryNotifier extends _$ProfileRepositoryNotifier {
+class ProfileRepositoryNotifier extends AutoDisposeAsyncNotifier<List<Repo>> {
   late final CancelToken _cancelToken;
 
   @override
@@ -22,9 +21,14 @@ class ProfileRepositoryNotifier extends _$ProfileRepositoryNotifier {
 
   Future<List<Repo>> _getProfileRepository() async {
     final repository = ref.read(authRepositoryProvider);
-    return await repository.getProfileRepository(
-      requestParams: RequestParams(cancelToken: _cancelToken),
+    final result = await repository.getProfileRepository(
+      cancelToken: _cancelToken,
       username: 'nandakista',
+    );
+
+    return result.fold(
+      (items) => items,
+      (failure) => throw failure,
     );
   }
 

@@ -1,19 +1,19 @@
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import 'package:skybase/config/base/pagination_state.dart';
 import 'package:skybase/config/base/request_param.dart';
-import 'package:skybase/data/models/sample_feature/sample_feature.dart';
+import 'package:skybase/domain/entities/sample_feature/sample_feature.dart';
+import 'package:skybase/domain/repositories/sample_feature_repository.dart';
 import 'package:skybase/data/repositories/sample_feature/sample_feature_repository.dart';
 
-part 'sample_feature_list_notifier.g.dart';
+final sampleFeatureListProvider = NotifierProvider.autoDispose<SampleFeatureListNotifier, PaginationState>(SampleFeatureListNotifier.new);
 
-@riverpod
-class SampleFeatureListNotifier extends _$SampleFeatureListNotifier {
-  late final SampleFeatureRepository _repository;
+class SampleFeatureListNotifier extends AutoDisposeNotifier<PaginationState> {
+  late final ISampleFeatureRepository _repository;
   late final CancelToken _cancelToken;
 
   @override
@@ -32,20 +32,27 @@ class SampleFeatureListNotifier extends _$SampleFeatureListNotifier {
     bool? hasMore,
     String? sort,
   }) async {
-    final items = await _repository.getUsers(
+    final result = await _repository.getUsers(
       requestParams: RequestParams(cancelToken: _cancelToken),
       page: page,
       perPage: perPage,
       username: state.search,
     );
 
-    state = state.copyWith(
-      page: page + 1,
-      hasMore: items.length == perPage,
+    return result.fold(
+      (items) {
+        state = state.copyWith(
+          page: page + 1,
+          hasMore: items.length == perPage,
+        );
+        log('state after = $state');
+        return items;
+      },
+      (failure) {
+        log('Error loading users: ${failure.message}');
+        throw failure;
+      },
     );
-
-    log('state after = $state');
-    return items;
   }
 
   Future<void> onRefresh({

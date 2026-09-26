@@ -1,30 +1,19 @@
-import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skybase/config/auth_manager/auth_manager.dart';
-import 'package:skybase/config/base/request_param.dart';
+import 'package:skybase/domain/repositories/auth_repository.dart';
 import 'package:skybase/data/repositories/auth/auth_repository.dart';
 
-part 'login_notifier.g.dart';
+final loginProvider = AsyncNotifierProvider.autoDispose<LoginNotifier, bool?>(LoginNotifier.new);
 
-@riverpod
-class LoginNotifier extends _$LoginNotifier {
-  late final AuthRepository _repository;
-  late final AuthManager _authManager;
-  late final CancelToken _cancelToken;
+class LoginNotifier extends AutoDisposeAsyncNotifier<bool?> {
+  late final IAuthRepository _repository;
 
   @override
-  AsyncValue<bool?> build() {
+  FutureOr<bool?> build() {
     _repository = ref.read(authRepositoryProvider);
-    _authManager = ref.read(authManagerProvider.notifier);
-    _cancelToken = CancelToken();
-
-    ref.onDispose(() {
-      _cancelToken.cancel();
-    });
-
-    return const AsyncValue.data(null);
+    return null;
   }
 
   Future<void> login({
@@ -32,32 +21,30 @@ class LoginNotifier extends _$LoginNotifier {
     required String email,
     required String password,
   }) async {
-    state = const AsyncValue.loading();
+    state = const AsyncLoading();
+    final result = await _repository.login(
+      phoneNumber: phoneNumber,
+      email: email,
+      password: password,
+    );
+
     state = await AsyncValue.guard(() async {
-      await _repository.login(
-        phoneNumber: phoneNumber,
-        email: email,
-        password: password,
+      return result.fold(
+        (user) async {
+          await ref.read(authManagerProvider.notifier).login(
+                user: user,
+                token: user.token ?? '',
+                refreshToken: user.refreshToken ?? '',
+              );
+          return true;
+        },
+        (failure) => throw failure,
       );
-      return true;
     });
   }
 
   Future<void> bypassLogin(BuildContext context) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      final response = await _repository.getProfile(
-        requestParams: RequestParams(cancelToken: _cancelToken),
-        username: 'nandakista',
-      );
-
-      await _authManager.login(
-        user: response,
-        token: 'dummy',
-        refreshToken: 'dummyRefresh',
-      );
-
-      return true;
-    });
+    // Implement bypass logic if needed, or just navigate
+    ref.read(authManagerProvider.notifier).onAuthChanged(AppType.AUTHENTICATED);
   }
 }

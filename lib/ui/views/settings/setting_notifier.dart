@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:skybase/config/auth_manager/auth_manager.dart';
 import 'package:skybase/core/database/storage/storage_key.dart';
@@ -7,10 +7,9 @@ import 'package:skybase/core/database/storage/storage_manager.dart';
 import 'package:skybase/core/helper/dialog_helper.dart';
 import 'package:skybase/core/localization/locale_notifier.dart';
 
-part 'setting_notifier.g.dart';
+final settingProvider = NotifierProvider.autoDispose<SettingNotifier, String>(SettingNotifier.new);
 
-@riverpod
-class SettingNotifier extends _$SettingNotifier {
+class SettingNotifier extends AutoDisposeNotifier<String> {
   late final AuthManager _authManager;
   late final LocaleNotifier _localeNotifier;
   late final StorageManager _storageManager;
@@ -34,8 +33,7 @@ class SettingNotifier extends _$SettingNotifier {
       languageCode,
     );
 
-    _localeNotifier.updateLocale(
-      context,
+    _localeNotifier.onUpdateLocale(
       Locale(languageCode),
     );
   }
@@ -43,5 +41,6 @@ class SettingNotifier extends _$SettingNotifier {
   Future<void> onLogout(BuildContext context) async {
     LoadingDialog.show(context);
     await _authManager.logout();
+    if (context.mounted) LoadingDialog.dismiss(context);
   }
 }

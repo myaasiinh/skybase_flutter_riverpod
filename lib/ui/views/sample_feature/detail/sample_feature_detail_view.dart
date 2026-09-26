@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skybase/domain/entities/sample_feature/sample_feature.dart';
 import 'package:skybase/ui/views/sample_feature/detail/sample_feature_detail_notifier.dart';
 import 'package:skybase/ui/views/sample_feature/detail/widgets/sample_feature_detail_header.dart';
 import 'package:skybase/ui/views/sample_feature/detail/widgets/sample_feature_detail_info.dart';
@@ -7,6 +8,7 @@ import 'package:skybase/ui/views/sample_feature/detail/widgets/sample_feature_de
 import 'package:skybase/ui/widgets/base/error_view.dart';
 import 'package:skybase/ui/widgets/shimmer/sample_feature/shimmer_sample_feature_detail.dart';
 import 'package:skybase/ui/widgets/sky_appbar.dart';
+
 
 class SampleFeatureDetailView extends ConsumerWidget {
   static const String route = '/user-detail';
@@ -22,17 +24,9 @@ class SampleFeatureDetailView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(
-      sampleFeatureDetailProvider(
-        userId: userId,
-        username: usernameArgs,
-      ),
-    );
-
-    final notifier = ref.read(sampleFeatureDetailProvider(
-      userId: userId,
-      username: usernameArgs,
-    ).notifier);
+    final args = SampleFeatureDetailArgs(userId: userId, username: usernameArgs);
+    final state = ref.watch(sampleFeatureDetailProvider(args));
+    final notifier = ref.read(sampleFeatureDetailProvider(args).notifier);
 
     return Scaffold(
       appBar: SkyAppBar.primary(title: usernameArgs),

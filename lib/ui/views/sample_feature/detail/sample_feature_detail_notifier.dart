@@ -1,23 +1,42 @@
 import 'package:dio/dio.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:skybase/config/base/request_param.dart';
-import 'package:skybase/data/models/sample_feature/sample_feature.dart';
+import 'package:skybase/core/network/result.dart';
+import 'package:skybase/domain/entities/sample_feature/sample_feature.dart';
+import 'package:skybase/domain/repositories/sample_feature_repository.dart';
 import 'package:skybase/data/repositories/sample_feature/sample_feature_repository.dart';
 
-part 'sample_feature_detail_notifier.g.dart';
+final sampleFeatureDetailProvider = AutoDisposeAsyncNotifierProviderFamily<
+    SampleFeatureDetailNotifier, SampleFeature, SampleFeatureDetailArgs>(
+  SampleFeatureDetailNotifier.new,
+);
 
-@riverpod
-class SampleFeatureDetailNotifier
-    extends _$SampleFeatureDetailNotifier {
-  late final SampleFeatureRepository _repository;
+class SampleFeatureDetailArgs {
+  final int userId;
+  final String username;
+
+  SampleFeatureDetailArgs({required this.userId, required this.username});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SampleFeatureDetailArgs &&
+          runtimeType == other.runtimeType &&
+          userId == other.userId &&
+          username == other.username);
+
+  @override
+  int get hashCode => userId.hashCode ^ username.hashCode;
+}
+
+class SampleFeatureDetailNotifier extends AutoDisposeFamilyAsyncNotifier<
+    SampleFeature, SampleFeatureDetailArgs> {
+  late final ISampleFeatureRepository _repository;
   late final CancelToken _cancelToken;
 
   @override
-  Future<SampleFeature> build({
-    required int userId,
-    required String username,
-  }) async {
+  Future<SampleFeature> build(SampleFeatureDetailArgs arg) async {
     _repository = ref.read(sampleFeatureRepositoryProvider);
     _cancelToken = CancelToken();
 
@@ -26,8 +45,8 @@ class SampleFeatureDetailNotifier
     });
 
     return _getDetailUser(
-      userId: userId,
-      username: username,
+      userId: arg.userId,
+      username: arg.username,
     );
   }
 
@@ -35,19 +54,24 @@ class SampleFeatureDetailNotifier
     required int userId,
     required String username,
   }) async {
-    return await _repository.getDetailUser(
+    final result = await _repository.getDetailUser(
       requestParams: RequestParams(cancelToken: _cancelToken),
       id: userId,
       username: username,
+    );
+
+    return result.fold(
+      (user) => user,
+      (failure) => throw failure,
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(
-          () => _getDetailUser(
-        userId: userId,
-        username: username,
+      () => _getDetailUser(
+        userId: arg.userId,
+        username: arg.username,
       ),
     );
   }

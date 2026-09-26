@@ -1,17 +1,15 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skybase/core/database/storage/storage_key.dart';
 import 'package:skybase/core/database/storage/storage_manager.dart';
 
-part 'theme_manager.g.dart';
+final themeManagerProvider = NotifierProvider<ThemeManager, bool>(ThemeManager.new);
 
-@riverpod
-class ThemeManager extends _$ThemeManager {
+class ThemeManager extends Notifier<bool> {
   late final StorageManager _storage;
 
   @override
   bool build() {
     _storage = ref.read(storageManagerProvider);
-
     return _storage.get<bool?>(StorageKey.IS_DARK_THEME) ?? false;
   }
 

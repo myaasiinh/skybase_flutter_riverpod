@@ -1,10 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skybase/config/themes/theme_manager.dart';
 import 'package:skybase/core/localization/locale_notifier.dart';
+import 'package:skybase/core/utils/app_provider_observer.dart';
 
 import 'config/auth_manager/auth_manager.dart';
 import 'config/themes/app_theme.dart';
@@ -21,11 +21,7 @@ void main() async {
 
   runApp(
     ProviderScope(
-      retry: (retryCount, error) {
-        if (retryCount >= 3) return null;
-        if (error is ProviderException) return null;
-        return Duration(milliseconds: 200 * (1 << retryCount));
-      },
+      observers: [AppProviderObserver()],
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
       ],

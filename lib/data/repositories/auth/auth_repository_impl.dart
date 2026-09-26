@@ -1,57 +1,55 @@
-import 'package:skybase/config/base/request_param.dart';
-import 'package:skybase/data/models/repo/repo.dart';
-import 'package:skybase/data/models/user/user.dart';
+import 'package:dio/dio.dart';
+import 'package:skybase/core/errors/failures.dart';
+import 'package:skybase/core/mixin/repository_handler_mixin.dart';
+import 'package:skybase/core/network/result.dart';
 import 'package:skybase/data/sources/server/auth/auth_sources.dart';
+import 'package:skybase/domain/entities/repo/repo.dart' as entity_repo;
+import 'package:skybase/domain/entities/user/user.dart' as entity;
+import 'package:skybase/domain/repositories/auth_repository.dart';
 
-import 'auth_repository.dart';
-
-class AuthRepositoryImpl implements AuthRepository {
+class AuthRepositoryImpl with RepositoryHandlerMixin implements IAuthRepository {
   final AuthSources apiService;
 
   AuthRepositoryImpl({required this.apiService});
 
-  String tag = 'AuthRepositoryImpl::->';
-
   @override
-  Future<User> login({
+  Future<Result<entity.User, AppFailure>> login({
     required String phoneNumber,
     required String email,
     required String password,
   }) async {
-    return await apiService.login(
-      phoneNumber: phoneNumber,
-      email: email,
-      password: password,
-    );
+    return safeCall(() async {
+      final response = await apiService.login(
+        phoneNumber: phoneNumber,
+        email: email,
+        password: password,
+      );
+      return response.toEntity();
+    });
   }
 
   @override
-  Future<User> verifyToken({
-    required int userId,
-    required String token,
-  }) async {
-    return await apiService.verifyToken(userId: userId, token: token);
+  Future<Result<entity.User, AppFailure>> getProfile({CancelToken? cancelToken}) async {
+    return safeCall(() async {
+      final response = await apiService.getProfile(
+        cancelToken: cancelToken ?? CancelToken(),
+        username: 'placeholder',
+      );
+      return response.toEntity();
+    });
   }
 
   @override
-  Future<User> getProfile({
-    required RequestParams requestParams,
+  Future<Result<List<entity_repo.Repo>, AppFailure>> getProfileRepository({
+    CancelToken? cancelToken,
     required String username,
   }) async {
-    return await apiService.getProfile(
-      cancelToken: requestParams.cancelToken,
-      username: username,
-    );
-  }
-
-  @override
-  Future<List<Repo>> getProfileRepository({
-    required RequestParams requestParams,
-    required String username,
-  }) async {
-    return await apiService.getProfileRepository(
-      cancelToken: requestParams.cancelToken,
-      username: username,
-    );
+    return safeCall(() async {
+      final response = await apiService.getProfileRepository(
+        cancelToken: cancelToken ?? CancelToken(),
+        username: username,
+      );
+      return response.map((e) => e.toEntity()).toList();
+    });
   }
 }

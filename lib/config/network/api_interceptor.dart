@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skybase/config/auth_manager/auth_manager.dart';
 import 'package:skybase/config/network/api_config.dart';
 import 'package:skybase/core/database/secure_storage/secure_storage_manager.dart';
+import 'package:skybase/core/utils/app_logger.dart';
 
 import 'api_token_manager.dart';
 
@@ -13,7 +14,7 @@ import 'api_token_manager.dart';
 */
 final apiInterceptorsProvider = Provider<ApiInterceptors>((ref) {
   final authManager = ref.read(authManagerProvider.notifier);
-  final secureStorage = ref.read(secureStorageManagerProvider); // masih singleton
+  final secureStorage = ref.read(secureStorageManagerProvider); 
   final dio = ref.read(dioProvider);
   return ApiInterceptors(
       dio: dio,
@@ -35,16 +36,12 @@ final class ApiInterceptors extends ApiTokenManager
   @override
   Future<dynamic> onRequest(options, handler) async {
     if (kDebugMode) {
-      debugPrint('');
-      debugPrint('# REQUEST');
-      debugPrint('--> ${options.method.toUpperCase()} - ${options.uri}');
-      debugPrint('Headers: ${options.headers}');
-      debugPrint('Query Params: ${options.queryParameters}');
-      debugPrint('Body: ${options.data}');
-      if (options.data is FormData) {
-        debugPrint('Body: ${(options.data as FormData).fields}');
-      }
-      debugPrint('--> END ${options.method.toUpperCase()}');
+      AppLogger.i('''
+# REQUEST
+--> ${options.method.toUpperCase()} - ${options.uri}
+Headers: ${options.headers}
+Query Params: ${options.queryParameters}
+Body: ${options.data}''');
     }
     return handler.next(options);
   }
@@ -52,13 +49,11 @@ final class ApiInterceptors extends ApiTokenManager
   @override
   Future<dynamic> onResponse(Response response, handler) async {
     if (kDebugMode) {
-      debugPrint('');
-      debugPrint('# RESPONSE');
-      debugPrint('<-- ${(response.requestOptions.uri)}');
-      debugPrint('Status Code : ${response.statusCode} ');
-      debugPrint('Headers: ${response.headers}');
-      debugPrint('Response: ${response.data}');
-      debugPrint('<-- END HTTP');
+      AppLogger.i('''
+# RESPONSE
+<-- ${(response.requestOptions.uri)}
+Status Code : ${response.statusCode}
+Response: ${response.data}''');
     }
     return super.onResponse(response, handler);
   }
@@ -66,15 +61,12 @@ final class ApiInterceptors extends ApiTokenManager
   @override
   Future<dynamic> onError(DioException err, handler) async {
     if (kDebugMode) {
-      debugPrint('');
-      debugPrint('# ERROR');
-      debugPrint('<-- ${err.response?.requestOptions.baseUrl}');
-      debugPrint('Status Code : ${err.response?.statusCode} ');
-      debugPrint('Error Message : ${err.error} ');
-      debugPrint('Error Message : ${err.message} ');
-      debugPrint('Error Response Message : ${err.response?.statusMessage} ');
-      debugPrint('Response Path : ${err.response?.requestOptions.uri}');
-      debugPrint('<-- End HTTP');
+      AppLogger.e('''
+# ERROR
+<-- ${err.response?.requestOptions.baseUrl}
+Status Code : ${err.response?.statusCode} 
+Error Message : ${err.message} 
+Response Path : ${err.response?.requestOptions.uri}''', err, err.stackTrace);
     }
     handleToken(
       dio: dio,

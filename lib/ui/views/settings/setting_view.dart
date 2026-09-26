@@ -61,22 +61,31 @@ class SettingView extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        RadioGroup(
-                          groupValue: languageCode,
-                          onChanged: (value) {
-                            settingNotifier.onUpdateLocale(
-                              context,
-                              languageCode: value.toString(),
-                            );
-                          },
-                          child: Row(
-                            children: [
-                              const Text('ENG'),
-                              Radio(value: 'en'),
-                              const Text('ID'),
-                              Radio(value: 'id'),
-                            ],
-                          ),
+                        Row(
+                          children: [
+                            const Text('ENG'),
+                            Radio(
+                              value: 'en',
+                              groupValue: languageCode,
+                              onChanged: (value) {
+                                settingNotifier.onUpdateLocale(
+                                  context,
+                                  languageCode: value.toString(),
+                                );
+                              },
+                            ),
+                            const Text('ID'),
+                            Radio(
+                              value: 'id',
+                              groupValue: languageCode,
+                              onChanged: (value) {
+                                settingNotifier.onUpdateLocale(
+                                  context,
+                                  languageCode: value.toString(),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
